@@ -1,5 +1,5 @@
 <!--
- * @Description: 
+ * @Description:
  * @Author: Rabbiter
  * @Date: 2023-03-08 20:38:49
 -->
@@ -19,7 +19,7 @@
       <el-table-column prop="tips" label="考生提示" width="400"></el-table-column>
       <el-table-column fixed="right" label="操作" width="150">
         <template slot-scope="scope">
-          <el-button @click="add(scope.row.paperId,scope.row.source)" type="primary" icon="el-icon-a-07">录入题目</el-button>
+          <el-button @click="add(scope.row.paperId,scope.row.examCode,scope.row.source)" type="primary" icon="el-icon-a-07">录入题目</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -67,8 +67,8 @@ export default {
       this.pagination.current = val
       this.getExamInfo()
     },
-    add(paperId,source) { //增加题库
-      this.$router.push({path:'/addAnswerChildren',query: {paperId: paperId,subject:source}})
+    add(paperId,examCode,source) { //增加题库
+      this.$router.push({path:'/addAnswerChildren',query: {paperId: paperId,examCode: examCode,subject:source}})
     }
   },
 };

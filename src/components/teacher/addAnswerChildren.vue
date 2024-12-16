@@ -1,6 +1,9 @@
 // 添加题库
 <template>
   <div class="add">
+    <span>
+      当前试卷总分：{{examTotalScore}}，请注意添加试卷的分数不能超出100分
+    </span>
     <el-tabs v-model="activeName">
       <el-tab-pane name="first">
         <span slot="label"><i class="el-icon-circle-plus"></i>添加试题</span>
@@ -115,6 +118,12 @@
                 >
                 </el-option>
               </el-select>
+            </li>
+            <li>
+              <span>题目分数:</span>
+              <el-input-number v-model="questionScore"
+                               placeholder="请输入题目分数">
+              </el-input-number>
             </li>
           </ul>
           <!-- 选择题部分 -->
@@ -279,15 +288,21 @@
           <ul>
             <li>
               <span>选择题数量：</span>
-              <el-input type="text" v-model="changeNumber"></el-input>
+              <el-input-number v-model="changeNumber"></el-input-number>
+              <span>选择题合计总分：</span>
+              <el-input-number v-model="changeTotalScore"></el-input-number>
             </li>
             <li>
               <span>填空题数量：</span>
-              <el-input type="text" v-model="fillNumber"></el-input>
+              <el-input-number v-model="fillNumber"></el-input-number>
+              <span>填空题合计总分：</span>
+              <el-input-number v-model="fillTotalScore"></el-input-number>
             </li>
             <li>
               <span>判断题数量：</span>
-              <el-input type="text" v-model="judgeNumber"></el-input>
+              <el-input-number v-model="judgeNumber"></el-input-number>
+              <span>判断题合计总分：</span>
+              <el-input-number v-model="judgeTotalScore"></el-input-number>
             </li>
             <li>
               <el-button type="primary" @click="create()">立即组卷</el-button>
@@ -303,10 +318,15 @@
 export default {
   data() {
     return {
-      changeNumber: null, //选择题出题数量
-      fillNumber: null, //填空题出题数量
-      judgeNumber: null, //判断题出题数量
+      changeNumber: 0, //选择题出题数量
+      fillNumber: 0, //填空题出题数量
+      judgeNumber: 0, //判断题出题数量
+      changeTotalScore: 0, //
+      fillTotalScore: 0, //
+      judgeTotalScore: 0, //
       activeName: "first", //活动选项卡
+      examTotalScore: null,
+      questionScore: 2,
       options: [
         //题库类型
         {
@@ -379,6 +399,7 @@ export default {
         answerB: "",
         answerC: "",
         answerD: "",
+        score:null
       },
       postFill: {
         //填空题提交内容
@@ -388,6 +409,7 @@ export default {
         section: "", //对应章节
         question: "", //题目
         analysis: "", //解析
+        score:null
       },
       postJudge: {
         //判断题提交内容
@@ -397,6 +419,7 @@ export default {
         section: "", //对应章节
         question: "", //题目
         analysis: "", //解析
+        score:null
       },
       postPaper: {
         //考试管理表对应字段
@@ -407,10 +430,90 @@ export default {
     };
   },
   created() {
+    this.getTotalScore(this.$route.query.examCode);
     this.getParams();
   },
   methods: {
+    getTotalScore(examCode) {
+      //获取当前试卷目前累计组卷总分
+      this.$axios(`/api/exam/${examCode}`).then(res => {
+        this.examTotalScore =res.data.data.totalScore
+      })
+    },
     create() {
+      if (this.changeNumber<0||this.fillNumber<0||this.judgeNumber<0){
+        this.$message({
+          message: "数量不允许负数",
+          type: "error",
+        });
+        return
+      }
+      if (this.changeNumber+this.fillNumber+this.judgeNumber===0){
+        this.$message({
+          message: "最少组一条题目",
+          type: "error",
+        });
+        return
+      }
+      if(this.changeNumber!=null && this.changeNumber > 0 && this.changeTotalScore<=0){
+        this.$message({
+          message: "选择题合计总分不允许为0或者负数",
+          type: "error",
+        });
+        return
+      }
+      if(this.fillNumber!=null && this.fillNumber > 0 && this.fillTotalScore<=0){
+        this.$message({
+          message: "填空题总分不允许为0或者负数",
+          type: "error",
+        });
+        return
+      }
+      if(this.judgeNumber!=null && this.judgeNumber > 0 && this.judgeTotalScore<=0){
+        this.$message({
+          message: "判断题总分不允许为0或者负数",
+          type: "error",
+        });
+        return
+      }
+      if (this.changeNumber != null && this.changeNumber <= 0 && this.changeTotalScore > 0) {
+        this.$message({
+          message: "请输入选择题数量或设置选择题总分为0",
+          type: "error",
+        });
+        return
+      }
+      if (this.fillNumber != null && this.fillNumber <= 0 && this.fillTotalScore > 0) {
+        this.$message({
+          message: "请输入填空题数量或设置填空题总分为0",
+          type: "error",
+        });
+        return
+      }
+      if (this.judgeNumber != null && this.judgeNumber <= 0 && this.judgeTotalScore > 0) {
+        this.$message({
+          message: "请输入判断题数量或设置判断题总分为0",
+          type: "error",
+        });
+        return
+      }
+      let sum = 0;
+      if(this.judgeNumber!=null && this.judgeNumber > 0){
+        sum+=this.judgeTotalScore;
+      }
+      if(this.fillNumber!=null && this.fillNumber > 0){
+        sum+=this.fillTotalScore;
+      }
+      if(this.changeNumber!=null && this.changeNumber > 0){
+        sum+=this.changeTotalScore;
+      }
+      if (this.examTotalScore+sum>100){
+        this.$message({
+          message: "题目合计总分不能超出100分",
+          type: "error",
+        });
+        return
+      }
       this.$axios({
         url: "/api/item",
         method: "post",
@@ -418,6 +521,9 @@ export default {
           changeNumber: this.changeNumber,
           fillNumber: this.fillNumber,
           judgeNumber: this.judgeNumber,
+          fillTotalScore: this.fillTotalScore,
+          judgeTotalScore: this.judgeTotalScore,
+          changeTotalScore: this.changeTotalScore,
           paperId: this.paperId,
           subject: this.subject,
         },
@@ -449,6 +555,21 @@ export default {
     changeSubmit() {
       //选择题题库提交
       this.postChange.subject = this.subject;
+      if (this.questionScore == null || this.questionScore<=0){
+        this.$message({
+          message: "请输入分数",
+          type: "error",
+        });
+        return
+      }else if (this.examTotalScore+this.questionScore>100){
+        this.$message({
+          message: "您添加的试题分数已超100，或以到达100，请设置合适的分数",
+          type: "error",
+        });
+        return
+      }else {
+        this.postChange.score = this.questionScore;
+      }
       this.$axios({
         //提交数据到选择题题库表
         url: "/api/MultiQuestion",
@@ -478,6 +599,7 @@ export default {
               answerC: "",
               answerD: "",
             };
+            this.getTotalScore(this.$route.query.examCode);
           }
         })
         .then(() => {
@@ -499,6 +621,21 @@ export default {
     fillSubmit() {
       //填空题提交
       this.postFill.subject = this.subject;
+      if (this.questionScore == null || this.questionScore<=0){
+        this.$message({
+          message: "请输入分数",
+          type: "error",
+        });
+        return
+      }else if (this.examTotalScore+this.questionScore>100){
+        this.$message({
+          message: "您添加的试题分数已超100，或以到达100，请设置合适的分数",
+          type: "error",
+        });
+        return
+      }else {
+        this.postFill.score = this.questionScore;
+      }
       this.$axios({
         url: "/api/fillQuestion",
         method: "post",
@@ -522,6 +659,7 @@ export default {
               question: "", //题目
               analysis: "", //解析
             };
+            this.getTotalScore(this.$route.query.examCode);
           }
         })
         .then(() => {
@@ -543,6 +681,21 @@ export default {
     judgeSubmit() {
       //判断题提交
       this.postJudge.subject = this.subject;
+      if (this.questionScore == null || this.questionScore<=0){
+        this.$message({
+          message: "请输入分数",
+          type: "error",
+        });
+        return
+      }else if (this.examTotalScore+this.questionScore>100){
+        this.$message({
+          message: "您添加的试题分数已超100，或以到达100，请设置合适的分数",
+          type: "error",
+        });
+        return
+      }else {
+        this.postJudge.score = this.questionScore;
+      }
       this.$axios({
         url: "/api/judgeQuestion",
         method: "post",
@@ -566,6 +719,7 @@ export default {
               question: "", //题目
               analysis: "", //解析
             };
+            this.getTotalScore(this.$route.query.examCode);
           }
         })
         .then(() => {

@@ -47,7 +47,6 @@ const webpackConfig = merge(baseWebpackConfig, {
       // Setting the following option to `false` will not extract CSS from codesplit chunks.
       // Their CSS will instead be inserted dynamically with style-loader when the codesplit chunk has been loaded by webpack.
       // It's currently set to `true` because we are seeing that sourcemaps are included in the codesplit bundle as well when it's `false`, 
-      // increasing file size: https://github.com/vuejs-templates/webpack/issues/1110
       allChunks: true,
     }),
     // Compress extracted CSS. We are using this plugin so that possible
@@ -59,7 +58,6 @@ const webpackConfig = merge(baseWebpackConfig, {
     }),
     // generate dist index.html with correct asset hash for caching.
     // you can customize output by editing /index.html
-    // see https://github.com/ampedandwired/html-webpack-plugin
     new HtmlWebpackPlugin({
       filename: config.build.index,
       template: 'index.html',
@@ -68,8 +66,6 @@ const webpackConfig = merge(baseWebpackConfig, {
         removeComments: true,
         collapseWhitespace: true,
         removeAttributeQuotes: true
-        // more options:
-        // https://github.com/kangax/html-minifier#options-quick-reference
       },
       // necessary to consistently work with multiple chunks via CommonsChunkPlugin
       chunksSortMode: 'dependency'

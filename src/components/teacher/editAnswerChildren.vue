@@ -100,6 +100,12 @@
                 </el-option>
               </el-select>
             </li>
+            <li>
+              <span>题目分数:</span>
+                <el-input-number v-model="score"
+                          placeholder="请输入题目分数">
+                </el-input-number>
+            </li>
           </ul>
           <!-- 选择题部分 -->
           <div class="change" v-if="optionValue == '选择题'">
@@ -264,6 +270,7 @@ export default {
   data() {
     return {
       activeName: "first", //活动选项卡
+      score:2,
       options: [
         //题库类型
         {
@@ -334,6 +341,7 @@ export default {
         answerB: "",
         answerC: "",
         answerD: "",
+        score:null
       },
       postFill: {
         //填空题提交内容
@@ -343,6 +351,7 @@ export default {
         section: "", //对应章节
         question: "", //题目
         analysis: "", //解析
+        score:null
       },
       postJudge: {
         //判断题提交内容
@@ -352,6 +361,7 @@ export default {
         section: "", //对应章节
         question: "", //题目
         analysis: "", //解析
+        score:null
       },
       type: "选择题",
       questionId: "",
@@ -377,21 +387,32 @@ export default {
             switch(this.type) {
                 case "选择题":
                     this.postChange = res.data.data.multiQuestion;
+                    this.score = res.data.data.multiQuestion.score
                     break;
                 case "判断题":
                     this.postJudge = res.data.data.judgeQuestion;
+                  this.score = res.data.data.judgeQuestion.score
                     break;
                 case "填空题":
                     this.postFill = res.data.data.fillQuestion;
+                  this.score = res.data.data.fillQuestion.score
                     console.log(this.postFill)
                     break;
             }
         })
-        .catch((error) => {});        
+        .catch((error) => {});
     },
     changeSubmit() {
       //选择题题库提交
       this.postChange.questionId = this.questionId;
+      if (this.score == null || this.score<=0){
+        this.$message({
+          message: "请输入分数",
+          type: "error",
+        });
+      }else {
+        this.postChange.score = this.score;
+      }
       this.$axios({
         //提交数据到选择题题库表
         url: "/api/editMultiQuestion",
@@ -418,6 +439,14 @@ export default {
     fillSubmit() {
       //填空题提交
       this.postFill.questionId = this.questionId;
+      if (this.score == null || this.score<=0){
+        this.$message({
+          message: "请输入分数",
+          type: "error",
+        });
+      }else {
+        this.postFill.score = this.score;
+      }
       this.$axios({
         url: "/api/editFillQuestion",
         method: "post",
@@ -442,6 +471,14 @@ export default {
     judgeSubmit() {
       //判断题提交
       this.postJudge.questionId = this.questionId;
+      if (this.score == null || this.score<=0){
+        this.$message({
+          message: "请输入分数",
+          type: "error",
+        });
+      }else {
+        this.postJudge.score = this.score;
+      }
       this.$axios({
         url: "/api/editJudgeQuestion",
         method: "post",
